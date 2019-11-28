@@ -1,0 +1,12 @@
+---
+
+box_option_pin_version: false
+
+box_mongo_version: "3.6" #  "2.6" | "3" | "3.2" | "3.4" | "3.6"
+box_mongo_family: "org" # org | enterprise
+box_mongo_repo_suffix: "org"
+box_mongo_bind_ip: 127.0.0.1
+box_mongo_conf2_properties:
+  - {regexp: "^bind_ip =.*", line: "bind_ip = {{ box_mongo_bind_ip }}"}
+box_mongo_conf3_properties:
+  - {regexp: "^  bindIp:.*", line: "  bindIp: {{ box_mongo_bind_ip }}"}

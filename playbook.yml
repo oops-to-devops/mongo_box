@@ -1,0 +1,55 @@
+---
+- hosts: mongo_box
+  gather_facts: False
+
+  vars:
+    - root_dir: "{{ playbook_dir }}"
+    - shared_dir: "{{ playbook_dir }}/../shared"
+
+  pre_tasks:
+    - debug: msg="Pre tasks section for {{ansible_host}}"
+
+    - set_fact:
+        remote_ip_address: "{{ ansible_host }}"
+
+    - name: ANSIBLE PYTHON | install python 2
+      raw: test -e /usr/bin/python || (apt -qqy update && apt install -qy python-minimal)
+      become: yes
+
+    - name:  UNPRIVILEGED USERS | Get acl dependency (ansible unprivileged user operations magic)
+      apt: pkg="acl"
+      become: yes
+
+    - name: gather facts
+      setup:
+
+    - name: include default vars
+      include_vars: "defaults/main.yml"
+
+
+    - name: Check for common pretasks
+      local_action: stat path="{{shared_dir}}/common_pretasks.yml"
+      register: common_pretasks_exists
+      tags: always
+
+    - name: Include common pretasks
+      include_tasks: "{{shared_dir}}/common_pretasks.yml"
+      when: common_pretasks_exists.stat.exists == true
+      tags: always
+
+  roles:
+    - {
+        name: "sa_mongo",
+        mongo_version: "{{ box_mongo_version }}", #  "2.6" | "3" | "3.2" | "3.4" | "3.6"
+        mongo_family: "{{ box_mongo_family }}", # org | enterprise
+        mongo_repo_suffix: "{{ box_mongo_repo_suffix }}",
+        mongo_bind_ip: "{{ box_mongo_bind_ip }}",
+        mongo_conf2_properties: "{{ box_mongo_conf2_properties }}",
+        mongo_conf3_properties: "{{ box_mongo_conf3_properties }}",
+        option_pin_version: "{{ box_option_pin_version }}"
+      }
+  tasks:
+
+    - debug: msg="Tasks section"
+
+    - include_tasks: tasks/main.yml
